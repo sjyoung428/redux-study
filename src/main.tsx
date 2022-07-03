@@ -8,39 +8,88 @@
 //   </React.StrictMode>
 // );
 
-import { Action, createStore, Reducer } from "redux";
+import { AnyAction, createStore, Reducer } from "redux";
 
-const add = document.getElementById("plus")!;
-const number = document.getElementById("number")!;
-const minus = document.getElementById("minus")!;
+const form = document.querySelector("form")!;
+const input = document.querySelector("input")!;
+const ul = document.querySelector("ul")!;
 
-enum method {
-  "ADD" = "ADD",
-  "MINUS" = "MINUS",
+enum TODO {
+  ADD = "ADD",
+  DELETE = "DELETE",
 }
 
-const countModifier: Reducer = (count: number = 0, action: Action) => {
+interface IToDo {
+  toDo: string;
+  id: number;
+}
+
+const addToDo = (toDo: string) => {
+  return {
+    type: TODO.ADD,
+    toDo,
+  };
+};
+
+const deleteToDo = (id: string) => {
+  return { type: TODO.DELETE, id };
+};
+
+const reducer: Reducer = (state: IToDo[] = [], action: AnyAction) => {
   switch (action.type) {
-    case method.ADD:
-      count++;
-      return count;
-    case method.MINUS:
-      count--;
-      return count;
+    case TODO.ADD:
+      return [{ toDo: action.toDo, id: Date.now() }, ...state];
+    case TODO.DELETE:
+      return state.filter((toDo) => {
+        return toDo.id !== parseInt(action.id);
+      });
     default:
-      return count;
+      return [];
   }
 };
 
-const countStore = createStore(countModifier); //스토어 생성
+const store = createStore(reducer);
 
-add.addEventListener("click", () => countStore.dispatch({ type: method.ADD }));
-minus.addEventListener("click", () =>
-  countStore.dispatch({ type: method.MINUS })
-);
-
-const onChange = () => {
-  number.innerText = countStore.getState();
+const dispatchDeleteToDo = (event: any) => {
+  const id = event.target.parentNode.id;
+  store.dispatch(deleteToDo(id));
 };
 
-countStore.subscribe(onChange); //변경점이 있을 때마다 실행
+const dispatchAddToDo = (toDo: string) => {
+  store.dispatch(addToDo(toDo));
+};
+
+const paintToDos = () => {
+  const toDos: IToDo[] = store.getState();
+  ul.innerHTML = "";
+  toDos.forEach((toDo) => {
+    const li = document.createElement("li");
+    const deleteBtn = document.createElement("button");
+    deleteBtn.innerText = "❌";
+
+    deleteBtn.addEventListener("click", dispatchDeleteToDo);
+
+    li.id = toDo.id + "";
+    li.innerText = toDo.toDo;
+    ul.appendChild(li);
+    li.appendChild(deleteBtn);
+  });
+};
+
+store.subscribe(paintToDos);
+
+// const createToDo = (toDo: string) => {
+//   const li = document.createElement("li");
+//   li.innerText = toDo;
+//   ul.appendChild(li);
+// };
+
+const onSubmit = (event: SubmitEvent) => {
+  event.preventDefault();
+  const toDo = input.value;
+  input.value = "";
+  // createToDo(toDo);
+  dispatchAddToDo(toDo);
+};
+
+form.addEventListener("submit", onSubmit);
