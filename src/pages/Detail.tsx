@@ -1,7 +1,7 @@
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
-import { deleteToDo, IToDo } from "../store";
+import { IToDo, remove } from "../store";
 import { getTime } from "../utils/getTime";
 
 const Detail = () => {
@@ -21,7 +21,7 @@ const Detail = () => {
       <br />
       <button
         onClick={() => {
-          dispatch(deleteToDo(target?.id!));
+          dispatch(remove(target?.id!));
           navigate("/");
         }}
       >
